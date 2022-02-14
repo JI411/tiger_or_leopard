@@ -1,0 +1,6 @@
+numpy~=1.21.2
+pillow~=8.3.2
+onnxruntime~=1.10.0
+torchvision~=0.10.1+cpu
+opencv-python~=4.5.3.56
+streamlit~=1.5.1
