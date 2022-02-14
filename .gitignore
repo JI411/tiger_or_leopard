@@ -17,6 +17,7 @@ ENV*/
 *.csv
 *.pt
 *.pth
+*.onnx
 *.pdf
 *.zip
 *.mkv
