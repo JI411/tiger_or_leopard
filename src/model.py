@@ -1,8 +1,4 @@
-from pathlib import Path
-
-import cv2
 import numpy as np
-import onnx
 import onnxruntime as ort
 from torchvision import transforms
 
@@ -16,15 +12,11 @@ def get_transforms(ort_session):
         transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
     ])
 
-def session(weights: Path):
-    onnx.checker.check_model(onnx.load(str(weights)))
-    return ort.InferenceSession(weights)
 
+class ModelOnnx:
 
-class EfficientNetOnnx:
-
-    def __init__(self, weights):
-        self.ort_session = session(weights)
+    def __init__(self, weights: str):
+        self.ort_session = ort.InferenceSession(weights)
         self.transforms = get_transforms(self.ort_session)
         self.input_name = self.ort_session.get_inputs()[0].name
 
@@ -35,11 +27,3 @@ class EfficientNetOnnx:
         img = self.transforms(img).unsqueeze(0)
         output = self.run(img)
         return np.argmax(output)
-
-
-if __name__ == '__main__':
-
-    effnet = EfficientNetOnnx(weights='/home/ji411/Downloads/efficientnet-b2.onnx')
-    image = cv2.imread('/home/ji411/PycharmProjects/tiger_or_leopard/Princess_378.jpg')
-    image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-    print(effnet(image))
