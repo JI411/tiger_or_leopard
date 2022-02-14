@@ -2,7 +2,7 @@ import streamlit as st
 from PIL import Image
 import io
 
-from const import DATA_DIR, SRC_DIR, WEIGHTS_DIR
+from const import SRC_DIR, WEIGHTS_DIR, EXAMPLE_IMG, EXAMPLE_ZIP
 from zipfile import ZipFile
 from src.model import ModelOnnx
 
@@ -32,10 +32,11 @@ def app():
     st.sidebar.header("Configuration")
 
     PAGES = {
-        'From Image': from_image,
+        'From Images': from_images,
         'From ZIP': from_zip,
-
+        'Examples': examples,
     }
+
     page = st.sidebar.selectbox('Page:', options=list(PAGES.keys()), key='PAGE_selection')
 
     with st.sidebar:
@@ -49,8 +50,8 @@ def app():
         )
     PAGES[page]()
 
-def from_image():
-    st.markdown("Загрузите своё фото")
+def from_images():
+    st.markdown("From Images")
 
     model_type = st.selectbox(
         'Select model type',
@@ -58,7 +59,7 @@ def from_image():
     )
     model = get_model(model_type)
 
-    uploaded_images = st.file_uploader('Upload photo here', type=['jpg', 'jpeg', 'png'],  accept_multiple_files=True)
+    uploaded_images = st.file_uploader('Upload photos here', type=['jpg', 'jpeg', 'png'],  accept_multiple_files=True)
     for image in uploaded_images:
         name = image.name
         image = image.read()
@@ -71,7 +72,7 @@ def from_image():
         st.image(image)
 
 def from_zip():
-    st.markdown("Загрузите архив с фото")
+    st.markdown("From ZIP")
 
     model_type = st.selectbox(
         'Select model type',
@@ -82,6 +83,33 @@ def from_zip():
     uploaded_zip = st.file_uploader('Upload zip here', type=['zip'])
     if uploaded_zip is not None:
         with ZipFile(uploaded_zip) as archive:
+            for entry in archive.infolist():
+                with archive.open(entry) as file:
+                    with Image.open(file) as image:
+                        label = 'tiger' if model(image) == 1 else 'leopard'
+                        st.markdown(f'<h1 align="center"> {label} </h1>', unsafe_allow_html=True)
+                        st.markdown(entry.filename)
+                        st.image(image)
+
+
+def examples():
+    st.markdown("Посмотреть на примеры")
+
+    model_type = st.selectbox(
+        'Select model type',
+        ('ResNet', 'EfficientNet')
+    )
+    model = get_model(model_type)
+
+    if st.button('From Image'):
+        image = Image.open(EXAMPLE_IMG)
+        label = 'tiger' if model(image) == 1 else 'leopard'
+        st.markdown(f'<h1 align="center"> {label} </h1>', unsafe_allow_html=True)
+        st.markdown('Example')
+        st.image(image)
+
+    if st.button('From ZIP'):
+        with ZipFile(EXAMPLE_ZIP) as archive:
             for entry in archive.infolist():
                 with archive.open(entry) as file:
                     with Image.open(file) as image:
